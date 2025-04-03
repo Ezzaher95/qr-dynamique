@@ -1,0 +1,102 @@
+/* style.css */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f5f7fa;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    text-align: center;
+    color: #2c3e50;
+    margin-top: 30px;
+    font-size: 2rem;
+}
+
+form {
+    background: #fff;
+    max-width: 500px;
+    margin: 30px auto;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+input[type="submit"], button {
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 10px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+input[type="submit"]:hover, button:hover {
+    background-color: #0056b3;
+}
+
+.qr-section {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 60px;
+}
+
+.qr-box {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    width: 260px;
+    text-align: center;
+}
+
+.qr-box img {
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+.qr-box form input[type="text"] {
+    margin-bottom: 6px;
+}
+
+.actions {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.actions a, .actions form {
+    flex-grow: 1;
+    margin: 4px 0;
+}
+
+.actions a button, .actions form button {
+    width: 100%;
+    background-color: #6c757d;
+}
+
+.actions a button:hover, .actions form button:hover {
+    background-color: #495057;
+}
