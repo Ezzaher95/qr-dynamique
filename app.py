@@ -25,7 +25,7 @@ def dynamic_redirect():
 
 @app.route("/generate_qr")
 def generate_qr():
-    url = "http://localhost:5000/qr1"
+    url = "https://qr-dynamique.onrender.com/qr1"
     img = qrcode.make(url)
 
     os.makedirs("static", exist_ok=True)
