@@ -5,85 +5,111 @@ import json
 
 app = Flask(__name__)
 
-# Nouveau template avec téléchargement et design amélioré
+# Template HTML avec bouton télécharger et supprimer
 template = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>QR Code Dynamique</title>
+    <title>QR Code Manager</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 40px; background: #f9f9f9; }
-        input[type=text] { width: 320px; padding: 10px; font-size: 16px; }
-        button { padding: 10px 20px; font-size: 16px; margin: 10px; cursor: pointer; }
-        .preview { margin-top: 20px; background: #fff; padding: 20px; display: inline-block; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        img { margin-top: 10px; }
+        body { font-family: Arial, sans-serif; padding: 40px; background: #f5f5f5; }
+        h1 { text-align: center; }
+        form { margin: auto; width: 100%; max-width: 500px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        input[type=text], input[type=submit] { width: 100%; padding: 10px; margin: 8px 0; font-size: 16px; }
+        .qr-section { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 40px; }
+        .qr-box { background: #fff; padding: 15px; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); text-align: center; width: 240px; }
+        img { max-width: 100%; height: auto; }
+        .edit-form { margin-top: 10px; }
+        .actions a, .actions form { display: inline-block; margin: 4px; }
     </style>
 </head>
 <body>
-    <h1>🎯 Générateur de QR Code Dynamique</h1>
+    <h1>🎯 Gestionnaire de QR Codes Dynamiques</h1>
     <form method="POST">
-        <input type="text" name="url" placeholder="Entre l'URL ici" value="{{ current_url }}" required />
-        <br>
-        <button type="submit">📤 Générer le QR Code</button>
+        <input type="text" name="id" placeholder="ID du QR (ex: qr1, qr2...)" required>
+        <input type="text" name="url" placeholder="Lien de redirection" required>
+        <input type="submit" value="📤 Générer le QR Code">
     </form>
 
-    {% if qr_generated %}
-    <div class="preview">
-        <h3>✅ QR Code généré</h3>
-        <p><strong>URL :</strong> {{ current_url }}</p>
-        <img src="/static/mon_qr_code.png" alt="QR Code" width="200" />
-        <br>
-        <a href="/download_qr"><button>⬇️ Télécharger le QR Code</button></a>
+    <div class="qr-section">
+        {% for key, link in links.items() %}
+        <div class="qr-box">
+            <p><strong>{{ key }}</strong></p>
+            <img src="/static/{{ key }}.png" alt="QR {{ key }}">
+            <form method="POST" class="edit-form">
+                <input type="hidden" name="id" value="{{ key }}">
+                <input type="text" name="url" value="{{ link }}">
+                <input type="submit" value="🔄 Modifier">
+            </form>
+            <div class="actions">
+                <a href="/qr/{{ key }}" target="_blank">🔗 Test</a>
+                <a href="/download/{{ key }}">⬇️ Télécharger</a>
+                <form method="POST" action="/delete/{{ key }}" style="display:inline">
+                    <button type="submit">🗑️ Supprimer</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
     </div>
-    {% endif %}
 </body>
 </html>
 """
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    current_url = ""
-    qr_generated = False
+    links = {}
+    try:
+        with open("redirect_config.json", "r") as f:
+            links = json.load(f)
+    except:
+        links = {}
 
     if request.method == "POST":
+        qr_id = request.form.get("id")
         url = request.form.get("url")
-        if url:
+        if qr_id and url:
+            links[qr_id] = url
             with open("redirect_config.json", "w") as f:
-                json.dump({"qr1": url}, f)
-
-            img = qrcode.make(url)
+                json.dump(links, f, indent=2)
             os.makedirs("static", exist_ok=True)
-            img.save("static/mon_qr_code.png")
-            qr_generated = True
-            current_url = url
-    else:
-        try:
-            with open("redirect_config.json", "r") as f:
-                data = json.load(f)
-                current_url = data.get("qr1", "")
-        except:
-            current_url = ""
+            img = qrcode.make(url)
+            img.save(f"static/{qr_id}.png")
 
-    return render_template_string(template, current_url=current_url, qr_generated=qr_generated)
+    return render_template_string(template, links=links)
 
-@app.route("/qr1")
-def redirect_qr():
+@app.route("/qr/<qr_id>")
+def redirect_qr(qr_id):
     try:
         with open("redirect_config.json", "r") as f:
             data = json.load(f)
-            return redirect(data.get("qr1", "https://google.com"))
+            return redirect(data.get(qr_id, "https://google.com"))
     except:
         return redirect("https://google.com")
 
-@app.route("/download_qr")
-def download_qr():
-    path = "static/mon_qr_code.png"
+@app.route("/download/<qr_id>")
+def download_qr(qr_id):
+    path = f"static/{qr_id}.png"
     if os.path.exists(path):
         return send_file(path, as_attachment=True)
-    return "QR code non généré."
+    return "QR code non trouvé."
+
+@app.route("/delete/<qr_id>", methods=["POST"])
+def delete_qr(qr_id):
+    try:
+        # Supprimer du JSON
+        with open("redirect_config.json", "r") as f:
+            data = json.load(f)
+        data.pop(qr_id, None)
+        with open("redirect_config.json", "w") as f:
+            json.dump(data, f, indent=2)
+        # Supprimer le fichier image
+        img_path = f"static/{qr_id}.png"
+        if os.path.exists(img_path):
+            os.remove(img_path)
+    except:
+        pass
+    return redirect("/")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
