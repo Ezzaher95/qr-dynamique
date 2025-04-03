@@ -49,3 +49,10 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
+@app.route("/")
+def home():
+    return """
+        <h1>Générateur de QR Code Dynamique</h1>
+        <p>🎯 Utilise <a href='/generate_qr'>/generate_qr</a> pour voir le QR code.</p>
+    """
